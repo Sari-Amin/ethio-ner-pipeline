@@ -1,5 +1,5 @@
 from transformers import AutoTokenizer, AutoModelForTokenClassification, TrainingArguments, Trainer, DataCollatorForTokenClassification
-from datasets import Dataset, load_metric, ClassLabel
+from datasets import Dataset, DatasetDict
 from typing import List, Tuple
 import numpy as np
 import os
@@ -21,9 +21,9 @@ class NERTrainer:
         )
 
 
-    def load_conll_data(self, filepath: str) -> List[dict]:
+    def load_conll_data(self, filepath: str, split: float = 0.2, seed: int = 42) -> DatasetDict:
         """
-        Parse CoNLL file and return a list of dicts with tokens and labels.
+        Parse CoNLL format and return a train/validation split.
         """
         data = []
         tokens = []
@@ -43,7 +43,10 @@ class NERTrainer:
                         tokens.append(token)
                         labels.append(label)
 
-        return Dataset.from_list(data)
+        dataset = Dataset.from_list(data)
+        dataset_split = dataset.train_test_split(test_size=split, seed=seed)
+        return dataset_split
+
 
 
     def tokenize_and_align_labels(self, examples):
@@ -72,8 +75,9 @@ class NERTrainer:
         return tokenized_inputs
 
 
-    def train(self, dataset: Dataset, output_dir="ner_model"):
-        tokenized_dataset = dataset.map(self.tokenize_and_align_labels, batched=True)
+    def train(self, train_dataset: Dataset, val_dataset: Dataset, output_dir="ner_model"):
+        tokenized_train = train_dataset.map(self.tokenize_and_align_labels, batched=True)
+        tokenized_val = val_dataset.map(self.tokenize_and_align_labels, batched=True)
 
         args = TrainingArguments(
             output_dir=output_dir,
@@ -90,8 +94,8 @@ class NERTrainer:
         trainer = Trainer(
             model=self.model,
             args=args,
-            train_dataset=tokenized_dataset,
-            eval_dataset=tokenized_dataset,  
+            train_dataset=tokenized_train,
+            eval_dataset=tokenized_val,
             tokenizer=self.tokenizer,
             data_collator=data_collator
         )
