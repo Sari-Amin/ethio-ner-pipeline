@@ -1,0 +1,29 @@
+# Ignore the virtual environment
+/venv/
+.env/
+/env
+
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+#Ignore Data
+*.csv
+/data
+!data/raw/MachineLearningRating_v3.txt.dvc
+
+# Token or credential files
+config.yaml
+secrets.yaml
+*.key
+*.pem
+*.token
+*.session
