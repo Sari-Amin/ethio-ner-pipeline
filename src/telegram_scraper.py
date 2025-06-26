@@ -41,14 +41,19 @@ class TelegramScraper:
         for message in self.client.iter_messages(channel, limit=limit):
             if not message.message:
                 continue
+            media_path = None
+            if message.media and isinstance(message.media, MessageMediaPhoto):
+                media_path = f"data/media/{channel}_{message.id}.jpg"
+                self.client.download_media(message, file=media_path)
 
             msg_dict = {
-                "id": message.id,
-                "text": message.message,
-                "timestamp": message.date.isoformat(),
+                "ChannelTitle": channel,
+                "ChannelUsername": channel,
+                "ID": message.id,
                 "views": message.views,
-                "sender_id": message.sender_id,
-                "channel": channel
+                "Message": message.message,
+                "Date": message.date.isoformat(),
+                "MediaPath": media_path
             }
             messages_data.append(msg_dict)
 
